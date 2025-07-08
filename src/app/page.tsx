@@ -1,9 +1,10 @@
-
 "use client";
-const API_BASE_URL = "http://localhost:19000";
 
 import React, { useState, useEffect } from 'react';
-import ChartData from './chartData';
+import ChartData from './component/chartData';
+import DateRangePicker from './component/DateRangePicker';
+
+const API_BASE_URL = "http://localhost:19000";
 
 const sidebarItems = [
   { name: 'Dashboard', icon: '📊' },
@@ -22,79 +23,30 @@ const summaryCards = [
   { title: 'Total Outcome', amount: '$0.00', icon: '📉', changePositive: false },
 ];
 
-// Placeholder data for analytics chart
-const analyticsData = [
-  { month: 'Jan', income: 42000, outcome: 30000 },
-  { month: 'Feb', income: 30000, outcome: 38000 },
-  { month: 'Mar', income: 34000, outcome: 32000 },
-  { month: 'Apr', income: 42000, outcome: 30000 },
-  { month: 'May', income: 48000, outcome: 35000 },
-  { month: 'Jun', income: 30000, outcome: 20000 },
-  { month: 'Jul', income: 32000, outcome: 30000 },
-  { month: 'Aug', income: 30000, outcome: 28000 },
-  { month: 'Sep', income: 30000, outcome: 28000 },
-  { month: 'Oct', income: 30000, outcome: 28000 },
-  { month: 'Nov', income: 30000, outcome: 28000 },
-  { month: 'Dec', income: 30000, outcome: 28000 },
-];
-
-// Placeholder cards data
 const cards = [
   { type: 'Credit Card', number: '1234 5678 9101 1121', name: 'Jack Lewis', expiry: '06/21', brand: 'Mastercard' },
   { type: 'Credit Card', number: '1234 5678 9101 1121', name: 'Jack Lewis', expiry: '06/21', brand: 'VISA' },
 ];
 
-// Placeholder transactions data
 const initialTransactions = [
   { id: 1, name: 'Adobe After Effect', date: 'Sat, 20 Apr 2020', price: '$80.09', status: 'Completed', type: 'Outcome', saving: true},
   { id: 2, name: "Mcdonald's", date: 'Fri, 19 Apr 2020', price: '$7.03', status: 'Completed', type: 'Outcome', saving: false },
 ];
 
-// Placeholder installment data
 const installments = [
   { title: 'House Installments', collected: 120, total: 2000 },
   { title: 'Car Installments', collected: 500, total: 5000 },
-];
-
-const defaultChartData = [
-  { name: "Income", value: 160000 },
-  { name: "Expense", value: 70000 },
-  { name: "Saving", value: 30000 },
 ];
 
 export default function Dashboard() {
   const [darkMode, setDarkMode] = useState(true);
   const [transactions, setTransactions] = useState(initialTransactions);
   const [searchTerm, setSearchTerm] = useState('');
-  const [dateRange, setDateRange] = useState('10 May - 20 May');
-
-  // const parsePrice = (price) => parseFloat(price.replace('$', ''));
-
-  // // Count Persentase Changes
-  // const toPercentChange = (oldVal, newVal) =>{
-  //   if (oldVal === 0) return 'N/A';
-  //   const diff = newVal - oldVal;
-  //   const pct = (diff / oldVal) * 100;
-  //   const sign = pct >= 0 ? '+' : '';
-  //   return `${sign}${pct.toFixed(2)}%`;
-  // }
-
-  // const prevTransactions = transactions.slice(0, -1);
-
-  // // Calculate Before Totals
-  // const prevTotalIncome = prevTransactions
-  // .filter(t => t.status === 'INCOME')
-  // .reduce((sum, t) => sum + parsePrice(t.price), 0);
-  
-  // const prevTotalExpense = prevTransactions
-  // .filter(t => t.status === 'EXPENSE')
-  // .reduce((sum, t) => sum + parsePrice(t.price), 0);
-  
-  // const prevTotalSaving = prevTransactions
-  // .filter(t => t.saving === true)
-  // .reduce((sum, t) => sum + parsePrice(t.price), 0);
-  
-  // const prevTotalBalance = prevTotalIncome - prevTotalExpense;
+  const [dateRange, setDateRange] = useState({
+    startDate: new Date(),
+    endDate: new Date(),
+    key: 'selection'
+  });
 
   // Calculate totals
   const totalIncome = transactions
@@ -106,12 +58,11 @@ export default function Dashboard() {
     .reduce((sum, t) => sum + parseFloat(t.price.replace('$', '')), 0);
 
   const totalSaving = transactions
-    .filter(t => t.saving == true)
+    .filter(t => t.saving === true)
     .reduce((sum, t) => sum + parseFloat(t.price.replace('$', '')), 0);
 
   const totalBalance = totalIncome - totalExpense;
 
-  // Update summary cards with calculated values
   const updatedSummaryCards = [
     { title: 'Total Balance', amount: `$${totalBalance.toLocaleString('en-US')}`, icon: '💰', changePositive: true },
     { title: 'Total Income', amount: `$${totalIncome.toLocaleString('en-US')}`, icon: '💵', changePositive: true },
@@ -119,38 +70,34 @@ export default function Dashboard() {
     { title: 'Total Outcome', amount: `$${totalExpense.toLocaleString('en-US')}`, icon: '📉', changePositive: false },
   ];
 
-  // const updatedSummaryCards = [
-  //   { title: 'Total Balance', amount: `$${totalBalance.toLocaleString('en-US')}`, change: toPercentChange(prevTotalBalance, totalBalance), icon: '💰', changePositive: true },
-  //   { title: 'Total Income', amount: `$${totalIncome.toLocaleString('en-US')}`, change: toPercentChange(prevTotalIncome, totalIncome), icon: '💵', changePositive: true },
-  //   { title: 'Total Saving', amount: `$${totalSaving.toLocaleString('en-US')}`, change: toPercentChange(prevTotalSaving, totalSaving), icon: '🏦', changePositive: true },
-  //   { title: 'Total Outcome', amount: `$${totalExpense.toLocaleString('en-US')}`, change: toPercentChange(prevTotalExpense, totalExpense), icon: '📉', changePositive: false },
-  // ];
-
-  // Fetch transactions from API backend with Authorization header
   useEffect(() => {
     const token = localStorage.getItem('authToken');
-    fetch(`${API_BASE_URL}/api/transactions/list`, {
-      headers: {
-        Authorization: token || '',
-      },
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.data && Array.isArray(data.data)) {
-          setTransactions(data.data.map((item: any) => ({
-            id: item.ID,
-            name: item.Category,
-            date: new Date(item.CreatedAt).toDateString(),
-            price: '$' + item.Amount.toFixed(0),
-            status: item.Type,
-            saving: item.IsSaving,
-          })));
-        } else {
-          setTransactions([]);
-        }
+    if (dateRange.startDate && dateRange.endDate) {
+      const startDateStr = dateRange.startDate.toISOString().split('T')[0];
+      const endDateStr = dateRange.endDate.toISOString().split('T')[0];
+      fetch(`${API_BASE_URL}/api/transactions/search/date?startDate=${startDateStr}&endDate=${endDateStr}`, {
+        headers: {
+          Authorization: token || '',
+        },
       })
-      .catch(err => console.error(err));
-  }, []);
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.data && Array.isArray(data.data)) {
+            setTransactions(data.data.map((item: any) => ({
+              id: item.ID,
+              name: item.Category,
+              date: new Date(item.CreatedAt).toDateString(),
+              price: '$' + item.Amount.toFixed(0),
+              status: item.Type,
+              saving: item.IsSaving,
+            })));
+          } else {
+            setTransactions([]);
+          }
+        })
+        .catch(err => console.error(err));
+    }
+  }, [dateRange]);
 
   return (
     <div className={darkMode ? 'dark flex h-screen' : 'flex h-screen'}>
@@ -196,18 +143,18 @@ export default function Dashboard() {
 
         {/* Summary Cards */}
         <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        {updatedSummaryCards.map((card) => (
-          <div key={card.title} className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="text-3xl mr-4">{card.icon}</div>
-              <div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">{card.title}</div>
-                <div className="text-xl font-bold">{card.amount}</div>
+          {updatedSummaryCards.map((card) => (
+            <div key={card.title} className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="text-3xl mr-4">{card.icon}</div>
+                <div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">{card.title}</div>
+                  <div className="text-xl font-bold">{card.amount}</div>
+                </div>
               </div>
+              <div className={card.changePositive ? 'text-green-500' : 'text-red-500'}></div>
             </div>
-            <div className={card.changePositive ? 'text-green-500' : 'text-red-500'}></div>
-          </div>
-        ))}
+          ))}
         </section>
 
         {/* Analytics Chart Placeholder */}
@@ -250,12 +197,11 @@ export default function Dashboard() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <input
-                  type="text"
-                  placeholder="10 May - 20 May"
-                  className="border border-gray-300 rounded px-3 py-1"
-                  value={dateRange}
-                  onChange={(e) => setDateRange(e.target.value)}
+                <DateRangePicker
+                  dateRange={dateRange}
+                  onDateRangeChange={(range) =>
+                    setDateRange({ ...range, key: 'selection' })
+                  }
                 />
               </div>
             </div>
