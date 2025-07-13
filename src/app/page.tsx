@@ -1,19 +1,20 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import ChartData from './component/chartData';
 import DateRangePicker from './component/DateRangePicker';
 
 const API_BASE_URL = "http://localhost:19000";
 
 const sidebarItems = [
-  { name: 'Dashboard', icon: '📊' },
-  { name: 'Analytics', icon: '📈' },
-  { name: 'My Wallet', icon: '👛' },
-  { name: 'Accounts', icon: '👥' },
-  { name: 'Settings', icon: '⚙️' },
-  { name: 'Security', icon: '🛡️' },
-  { name: 'Help Centre', icon: '❓' },
+  { name: 'Dashboard', icon: '📊', href: '/' },
+  { name: 'Analytics', icon: '📈', href: '/analytics' },
+  { name: 'My Wallet', icon: '👛', href: '/my-wallet' },
+  { name: 'Accounts', icon: '👥', href: '/accounts' },
+  { name: 'Settings', icon: '⚙️', href: '/settings' },
+  { name: 'Security', icon: '🛡️', href: '/security' },
+  { name: 'Help Centre', icon: '❓', href: '/help-centre' },
 ];
 
 const summaryCards = [
@@ -42,7 +43,11 @@ export default function Dashboard() {
   const [darkMode, setDarkMode] = useState(true);
   const [transactions, setTransactions] = useState(initialTransactions);
   const [searchTerm, setSearchTerm] = useState('');
-  const [dateRange, setDateRange] = useState({
+  const [dateRange, setDateRange] = useState<{
+    startDate: Date;
+    endDate: Date;
+    key: string;
+  }>({
     startDate: new Date(),
     endDate: new Date(),
     key: 'selection'
@@ -72,10 +77,33 @@ export default function Dashboard() {
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
-    if (dateRange.startDate && dateRange.endDate) {
-      const startDateStr = dateRange.startDate.toISOString().split('T')[0];
-      const endDateStr = dateRange.endDate.toISOString().split('T')[0];
-      fetch(`${API_BASE_URL}/api/transactions/search/date?startDate=${startDateStr}&endDate=${endDateStr}`, {
+    // if (dateRange.startDate && dateRange.endDate) {
+    //   const startDateStr = dateRange.startDate.toISOString().split('T')[0];
+    //   const endDateStr = dateRange.endDate.toISOString().split('T')[0];
+    //   fetch(`${API_BASE_URL}/api/transactions/search/date?startDate=${startDateStr}&endDate=${endDateStr}`, {
+    //     headers: {
+    //       Authorization: token || '',
+    //     },
+    //   })
+    //     .then(res => res.json())
+    //     .then(data => {
+    //       if (data && data.data && Array.isArray(data.data)) {
+    //         setTransactions(data.data.map((item: any) => ({
+    //           id: item.ID,
+    //           name: item.Category,
+    //           date: new Date(item.CreatedAt).toDateString(),
+    //           price: '$' + item.Amount.toFixed(0),
+    //           status: item.Type,
+    //           saving: item.IsSaving,
+    //         })));
+    //       } else {
+    //         setTransactions([]);
+    //       }
+    //     })
+    //     .catch(err => console.error(err));
+    // } else {
+      // Fetch all transactions if no date range filter
+      fetch(`${API_BASE_URL}/api/transactions/list`, {
         headers: {
           Authorization: token || '',
         },
@@ -96,8 +124,8 @@ export default function Dashboard() {
           }
         })
         .catch(err => console.error(err));
-    }
-  }, [dateRange]);
+    // }
+  }, []);
 
   return (
     <div className={darkMode ? 'dark flex h-screen' : 'flex h-screen'}>
@@ -105,15 +133,21 @@ export default function Dashboard() {
       <aside className="bg-purple-700 text-white w-64 flex flex-col justify-between p-6">
         <div>
           <div className="flex items-center mb-10">
-            <div className="bg-blue-400 rounded-full p-2 mr-2">🔥</div>
-            <span className="font-bold text-xl">uifry™</span>
+            <img src="https://i.pinimg.com/736x/ab/86/21/ab8621adf8390f840106197f204d0743.jpg" className="rounded-full p-2 mr-2" style={{width: 80, height: 80}} />
+            <span className="font-bold text-xl">mumet</span>
           </div>
           <nav>
             {sidebarItems.map((item) => (
-              <div key={item.name} className="flex items-center mb-6 cursor-pointer hover:bg-purple-600 rounded p-2">
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`flex items-center mb-6 rounded p-2 hover:bg-purple-600 ${
+                  item.name === 'Dashboard' ? 'bg-purple-900' : ''
+                }`}
+              >
                 <span className="mr-3">{item.icon}</span>
                 <span>{item.name}</span>
-              </div>
+              </Link>
             ))}
           </nav>
           <hr className="my-6 border-purple-500" />
@@ -129,7 +163,7 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="flex items-center mt-10">
-          <img src="https://i.pravatar.cc/40" alt="User" className="rounded-full mr-3" />
+          <img src="https://i.pinimg.com/736x/9e/a9/e4/9ea9e43b348a49cb36f1a8a29df3645c.jpg" alt="User" className="rounded-full mr-3" style={{width: 50, height: 50}} />
           <div>
             <div>Egichandrap</div>
             <div className="text-sm text-purple-300">Backend Developer</div>
@@ -203,6 +237,12 @@ export default function Dashboard() {
                     setDateRange({ ...range, key: 'selection' })
                   }
                 />
+                <button
+                  className="ml-4 px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={() => setDateRange({ startDate: new Date(), endDate: new Date(), key: 'selection' })}
+                >
+                  Reset Filter
+                </button>
               </div>
             </div>
             <table className="w-full text-left text-sm">

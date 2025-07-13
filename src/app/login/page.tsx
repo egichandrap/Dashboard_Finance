@@ -2,6 +2,8 @@
 const API_BASE_URL = "http://localhost:19000";
 
 import React, { useState } from 'react';
+import { SiGmail } from 'react-icons/si';
+import { FaFacebook } from 'react-icons/fa';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -97,11 +99,11 @@ export default function LoginPage() {
           <hr className="flex-grow border-gray-300" />
         </div>
         <button className="w-full mb-3 py-2 border border-gray-300 rounded-md flex items-center justify-center space-x-2 hover:bg-gray-100">
-          <img src="/google.svg" alt="Google" className="w-5 h-5" />
+          < SiGmail size={20} color="#D44638" />
           <span>Sign in with Google</span>
         </button>
         <button className="w-full py-2 border border-gray-300 rounded-md flex items-center justify-center space-x-2 hover:bg-gray-100">
-          <img src="/facebook.svg" alt="Facebook" className="w-5 h-5" />
+          < FaFacebook size={20} color="#1877F2" />
           <span>Sign in with Facebook</span>
         </button>
         <p className="mt-6 text-center text-gray-500 text-sm">
